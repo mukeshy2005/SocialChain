@@ -1,245 +1,114 @@
+// src/components/CreatePostCard.jsx
+
 import React, { useState } from 'react';
-import Button from './Button';
-import Avatar from './Avatar';
-import { uploadToPinata } from '../utils/uploadToPinta'; 
+import { uploadToPinata } from '../utils/uploadToPinta'; // Make sure this path is correct
+import LoadingSpinner from './LoadingSpinner'; // We'll use this for loading states
 
-export default function CreatePostCard({ account, onSubmit, isSubmitting }) {
+const CreatePostCard = ({ contract, reload }) => {
   const [content, setContent] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [uploading, setUploading] = useState(false);
 
-  const handleFocus = () => setIsExpanded(true);
-
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
-      reader.readAsDataURL(file);
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
   const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+    setImageFile(null);
+    setPreviewUrl(null);
   };
 
-  const handleSubmit = async () => {
-    if (!content.trim() && !selectedImage) return;
+  const handleCreatePost = async () => {
+    if (!content.trim() && !imageFile) return;
+    if (!contract) {
+        alert("Contract not available. Please connect your wallet.");
+        return;
+    }
 
+    setIsSubmitting(true);
     try {
-      setUploading(true);
-
-      let imageUrl = null;
-
-      // ✅ Upload image to Pinata before calling parent onSubmit
-      if (selectedImage) {
-        imageUrl = await uploadToPinata(selectedImage);
-        console.log("📸 Uploaded image URL:", imageUrl);
+      let ipfsHash = "";
+      if (imageFile) {
+        console.log("Uploading image to Pinata...");
+        const response = await uploadToPinata(imageFile); // Use your Pinata util
+        ipfsHash = response || ""; // Assuming your util returns the hash
+        if (!ipfsHash) {
+          throw new Error("Image upload to Pinata failed.");
+        }
+        console.log("Image uploaded, IPFS Hash:", ipfsHash);
       }
-
-      // Call parent submit handler with content + image URL
-      await onSubmit({
-        content,
-        image: imageUrl,
-      });
-
-      // Reset form
-      setContent('');
-      setSelectedImage(null);
-      setImagePreview(null);
-      setIsExpanded(false);
-    } catch (err) {
-      console.error("❌ Error submitting post:", err);
-      alert("Error creating post. Check console.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-6 shadow-lg transition-all duration-300">
-      <div className="flex space-x-3">
-        <Avatar address={account} size="md" />
-        
-        <div className="flex-1">
-          <div 
-            className={`bg-gray-700/50 rounded-xl p-3 transition-all ${isExpanded ? 'h-32' : 'h-12'}`}
-          >
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onFocus={handleFocus}
-              placeholder="What's happening in the blockchain world?"
-              className="bg-transparent w-full h-full resize-none outline-none text-white placeholder-gray-400"
-            ></textarea>
-          </div>
-          
-          {/* Image preview */}
-          {imagePreview && (
-            <div className="relative mt-3 rounded-lg overflow-hidden">
-              <img src={imagePreview} alt="Preview" className="max-h-60 rounded-lg object-contain" />
-              <button 
-                onClick={removeImage}
-                className="absolute top-2 right-2 bg-gray-900/80 text-white rounded-full p-1 hover:bg-red-500/80 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          )}
-          
-          {isExpanded && (
-            <div className="flex justify-between mt-3">
-              {/* Media upload */}
-              <div className="flex space-x-3">
-                <label className="cursor-pointer flex items-center text-gray-400 hover:text-orange-400 transition-colors">
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Media
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>import React, { useState } from 'react';
-import Button from './Button';
-import Avatar from './Avatar';
-
-export default function CreatePostCard({ account, onSubmit, isSubmitting }) {
-  const [content, setContent] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  
-  const handleFocus = () => {
-    setIsExpanded(true);
-  };
-  
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
       
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      console.log("Creating post on blockchain...");
+      const tx = await contract.createPost(content, ipfsHash);
+      await tx.wait();
+      console.log("Post created successfully!");
+
+      // Reset form on success
+      setContent('');
+      setImageFile(null);
+      setPreviewUrl(null);
+      setIsExpanded(false);
+      reload && reload(); // Reload posts from parent
+    } catch (err) {
+      console.error("Failed to create post:", err);
+      alert("Failed to create post: " + (err?.reason || err.message));
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-  
-  const handleSubmit = () => {
-    if (!content.trim() && !selectedImage) return;
-    
-    onSubmit({ 
-      content, 
-      image: selectedImage 
-    });
-    
-    // Reset form
-    setContent('');
-    setSelectedImage(null);
-    setImagePreview(null);
-    setIsExpanded(false);
-  };
-  
+
   return (
-    <div className="bg-gray-800/60 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-6 shadow-lg transition-all duration-300">
-      <div className="flex space-x-3">
-        <Avatar address={account} size="md" />
-        
+    <div className="bg-[#1A1A1D] border border-gray-700/50 rounded-xl p-4 shadow-lg mb-8">
+      <div className="flex space-x-4">
+        {/* Placeholder for Avatar */}
+        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 flex-shrink-0"></div>
+
         <div className="flex-1">
-          <div 
-            className={`bg-gray-700/50 rounded-xl p-3 transition-all ${isExpanded ? 'h-32' : 'h-12'}`}
-          >
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onFocus={handleFocus}
-              placeholder="What's happening in the blockchain world?"
-              className="bg-transparent w-full h-full resize-none outline-none text-white placeholder-gray-400"
-            ></textarea>
-          </div>
-          
-          {/* Image preview */}
-          {imagePreview && (
-            <div className="relative mt-3 rounded-lg overflow-hidden">
-              <img src={imagePreview} alt="Preview" className="max-h-60 rounded-lg object-contain" />
-              <button 
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onFocus={() => setIsExpanded(true)}
+            placeholder="What's on your mind?"
+            className="w-full bg-gray-800 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+            rows={isExpanded ? 4 : 1}
+          />
+
+          {previewUrl && (
+            <div className="relative mt-3">
+              <img src={previewUrl} alt="Preview" className="max-h-72 w-full object-cover rounded-lg" />
+              <button
                 onClick={removeImage}
-                className="absolute top-2 right-2 bg-gray-900/80 text-white rounded-full p-1 hover:bg-red-500/80 transition-colors"
+                className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                &times;
               </button>
             </div>
           )}
-          
+
           {isExpanded && (
-            <div className="flex justify-between mt-3">
-              {/* Media upload button */}
-              <div className="flex space-x-3">
-                <label className="cursor-pointer flex items-center text-gray-400 hover:text-orange-400 transition-colors">
-                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Media
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
-                </label>
-                
-                {/* We could add more buttons here like polls, emoji, etc. */}
-              </div>
-              
-              <Button 
-                size="sm" 
-                disabled={!content.trim() && !selectedImage}
-                isLoading={isSubmitting}
-                onClick={handleSubmit}
+            <div className="flex items-center justify-between mt-4">
+              <label className="cursor-pointer text-gray-400 hover:text-purple-400">
+                <span>Add Image</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </label>
+              <button
+                onClick={handleCreatePost}
+                disabled={isSubmitting || (!content.trim() && !imageFile)}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
-                Post
-              </Button>
+                {isSubmitting ? <LoadingSpinner size="small" /> : 'Post'}
+              </button>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-}
-              
-              <Button 
-                size="sm" 
-                disabled={(!content.trim() && !selectedImage) || uploading}
-                isLoading={isSubmitting || uploading}
-                onClick={handleSubmit}
-              >
-                {uploading ? "Uploading..." : "Post"}
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+};
+export default CreatePostCard;
