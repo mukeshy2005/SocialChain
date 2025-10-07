@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import ExplorePage from './pages/ExplorePage';
 import SinglePostPage from './pages/SinglePostPage';
+import SavedPostsPage from './pages/SavedPostsPage'; 
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="explore" element={<ExplorePage />} />
           <Route path="post/:postId" element={<SinglePostPage />} />
+          <Route path="saved" element={<SavedPostsPage />} />
         </Route>
       </Routes>
     </Router>

@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import SelectPfpModal from '../SelectPfpModal'; // Import our new modal
+import SelectPfpModal from '../SelectPfpModal';
 
-const LeftSidebar = ({ account, onDisconnect, pfp, onPfpSelect }) => {
+const LeftSidebar = ({ account, onDisconnect, pfp, onPfpSelect, onCreatePostClick, notificationCount }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPfpModal, setShowPfpModal] = useState(false);
 
@@ -13,18 +13,35 @@ const LeftSidebar = ({ account, onDisconnect, pfp, onPfpSelect }) => {
   return (
     <>
       <aside className="w-64 p-4 text-white border-r border-gray-700/50 flex flex-col">
-        {/* Navigation and Create Post button remain the same */}
         <div>
             <h2 className="text-2xl font-bold mb-8 text-white">onsocial</h2>
             <nav>
                 <ul>
                     <li className="mb-4"><Link to="/" className="text-lg font-semibold hover:text-purple-400 p-2 flex">🏠 Home</Link></li>
                     <li className="mb-4"><Link to="/profile" className="text-lg font-semibold hover:text-purple-400 p-2 flex">👤 Profile</Link></li>
-                    <li className="mb-4"><Link to="/notifications" className="text-lg font-semibold hover:text-purple-400 p-2 flex">🔔 Notifications</Link></li>
+                    <li className="mb-4">
+                        <Link to="/saved" className="text-lg font-semibold hover:text-purple-400 transition-colors p-2 rounded-md flex items-center">
+                            <span className="mr-3">🔖</span> Saved
+                        </Link>
+                    </li>
+                    <li className="mb-4">
+                        <Link to="/notifications" className="text-lg font-semibold hover:text-purple-400 transition-colors p-2 rounded-md flex items-center relative">
+                            <span className="mr-3">🔔</span>
+                            Notifications
+                            {notificationCount > 0 && (
+                                <span className="absolute left-6 top-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                                    {notificationCount}
+                                </span>
+                            )}
+                        </Link>
+                    </li>
                     <li className="mb-4"><Link to="/explore" className="text-lg font-semibold hover:text-purple-400 p-2 flex">🔍 Explore</Link></li>
                 </ul>
             </nav>
-            <button className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-full shadow-lg">
+            <button 
+              onClick={onCreatePostClick}
+              className="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-full shadow-lg"
+            >
                 Create Post
             </button>
         </div>
@@ -52,9 +69,8 @@ const LeftSidebar = ({ account, onDisconnect, pfp, onPfpSelect }) => {
             className="hover:bg-gray-800/50 p-3 rounded-lg transition-colors cursor-pointer flex items-center justify-between"
           >
             <div className="flex items-center">
-              {/* This now displays the selected PFP */}
               {pfp ? (
-                <img src={pfp} alt="PFP" className="w-10 h-10 rounded-full bg-gray-800" />
+                <img src={pfp} alt="PFP" className="w-10 h-10 rounded-full bg-gray-800 object-cover" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-blue-500 flex-shrink-0"></div>
               )}
@@ -68,7 +84,6 @@ const LeftSidebar = ({ account, onDisconnect, pfp, onPfpSelect }) => {
         </div>
       </aside>
 
-      {/* Conditionally render the modal */}
       {showPfpModal && (
         <SelectPfpModal 
           account={account}
